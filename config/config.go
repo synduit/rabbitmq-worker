@@ -2,8 +2,6 @@ package config
 
 import (
 	"errors"
-	"gopkg.in/gcfg.v1"
-	"io/ioutil"
 	"strconv"
 	"strings"
 	"os"
