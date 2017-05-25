@@ -38,15 +38,14 @@ func main() {
 	// Parse command line arguments
 	// func usage() provides help message for the command line
 	flag.Usage = usage
-	configFile, flags := getArgs()
+	flags := getArgs()
 	flags.cleanStart = true
 
 	config := config.ConfigParameters{}
 
 	// Processing loop is re-executed anytime the RabbitMQ connection is broken, or a graceful restart is requested.
 	for {
-		if err := config.ParseConfigFile(configFile); err != nil {
-			fmt.Fprintln(os.Stderr, "Could not load the configuration file:", configFile, "-", err)
+		if err := config.ReadEnvVars(); err != nil {
 			break
 		}
 
@@ -62,7 +61,6 @@ func main() {
 			break
 		}
 
-		logFile.Write("Configuration file loaded")
 		logFile.WriteDebug("Config settings:\n" + config.String())
 
 		logFile.Write("Creating/Verifying RabbitMQ queues...")
@@ -103,24 +101,16 @@ func main() {
 	errFile.Close()
 }
 
-func getArgs() (configFile string, flags Flags) {
+func getArgs() (flags Flags) {
 	flag.BoolVar(&flags.DebugMode, "debug", false, "Enable debug messages - Bool")
 	flag.BoolVar(&flags.QueuesOnly, "queues-only", false, "Create/Verify queues only - Bool")
 
 	flag.Parse()
 
-	argCnt := len(flag.Args())
-	if argCnt == 1 {
-		configFile = flag.Args()[0]
-	} else {
-		usage()
-	}
-
 	return
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "Usage:", os.Args[0], "[OPTION] CONFIG_FILE\n")
 	fmt.Fprintln(os.Stderr, "  --debug          Write debug-level messages to the log file")
 	fmt.Fprintln(os.Stderr, "  -h, --help       Display this message")
 	fmt.Fprintln(os.Stderr, "  --queues-only    Create/Verify RabbitMQ queues, then exit")

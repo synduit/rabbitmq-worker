@@ -10,12 +10,10 @@ import (
 
 func main() {
 	flag.Usage = usage
-	configFile := getArgs()
 
 	config := config.ConfigParameters{}
 
-	if err := config.ParseConfigFile(configFile); err != nil {
-		fmt.Fprintln(os.Stderr, "Could not load the configuration file:", configFile, "-", err)
+	if err := config.ReadEnvVars(); err != nil {
 		os.Exit(1)
 	}
 
