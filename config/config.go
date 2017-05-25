@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"strconv"
 	"strings"
+	"os"
 )
 
 type ConfigParameters struct {
@@ -31,19 +32,41 @@ type ConfigParameters struct {
 	}
 }
 
-func (config *ConfigParameters) ParseConfigFile(configFile string) error {
-	configBytes, err := ioutil.ReadFile(configFile)
-	if err != nil {
-		return errors.New("Error encountered reading file " + configFile)
+
+func (config *ConfigParameters) ReadEnvVars() error {
+	user := "guest"
+	pass := "guest"
+	port := "5672"
+	host := "localhost"
+	RetryDelay := 30
+	QueueName := "notify"
+	PrefetchCount := 10
+	QueueWaitDelay := 30
+	DefaultTtl := 86400
+	DefaultMethod := "POST"
+	Timeout := 30
+
+	if len(os.Getenv("RABBIT_USER")) > 0 {
+		user = os.Getenv("RABBIT_USER")
+	}
+	if len(os.Getenv("RABBIT_PASS")) > 0 {
+		pass = os.Getenv("RABBIT_PASS")
+	}
+	if len(os.Getenv("RABBIT_PORT")) > 0 {
+		port = os.Getenv("RABBIT_PORT")
+	}
+	if len(os.Getenv("RABBIT_HOST")) > 0 {
+		host = os.Getenv("RABBIT_HOST")
 	}
 
-	if err = gcfg.ReadStringInto(config, string(configBytes)); err != nil {
-		return err
-	}
-
-	if len(config.Connection.RabbitmqURL) == 0 {
-		return errors.New("RabbitMQ URL is empty or missing")
-	}
+	config.Connection.RabbitmqURL = "amqp://" + user + ":" + pass + "@" + host + ":" + port + "/"
+	config.Connection.RetryDelay = RetryDelay
+	config.Queue.Name = QueueName
+	config.Queue.PrefetchCount = PrefetchCount
+	config.Queue.WaitDelay = QueueWaitDelay
+	config.Message.DefaultTTL = DefaultTtl
+	config.Http.DefaultMethod = DefaultMethod
+	config.Http.Timeout = Timeout
 
 	if config.Connection.RetryDelay < 5 {
 		return errors.New("Connection Retry Delay must be at least 5 seconds")
@@ -75,13 +98,8 @@ func (config *ConfigParameters) ParseConfigFile(configFile string) error {
 		return errors.New("Http Timeout must be at least 5 seconds")
 	}
 
-	if len(config.Log.LogFile) == 0 {
-		return errors.New("LogFile path is empty or missing")
-	}
-
-	if len(config.Log.ErrFile) == 0 {
-		return errors.New("ErrFile path is empty or missing")
-	}
+	config.Log.LogFile = "rabbitmq-worker.log"
+	config.Log.ErrFile = "rabbitmq-worker.err"
 
 	return nil
 }
