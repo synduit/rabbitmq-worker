@@ -9,35 +9,38 @@ import (
 
 type ConfigParameters struct {
 	Connection struct {
-		RabbitmqURL string
-		RetryDelay  int
-	}
-	Queue struct {
-		Name          string
-		WaitDelay     int
-		PrefetchCount int
-	}
-	Message struct {
-		DefaultTTL int
-	}
-	Http struct {
-		DefaultMethod string
-		Timeout       int
-	}
-	Log struct {
-		LogFile string
-		ErrFile string
-	}
+			   RabbitmqURL string
+			   RetryDelay  int
+		   }
+	Exchange   struct {
+			   Name string
+		   }
+	Queue      struct {
+			   Name          string
+			   WaitDelay     int
+			   PrefetchCount int
+		   }
+	Message    struct {
+			   DefaultTTL int
+		   }
+	Http       struct {
+			   DefaultMethod string
+			   Timeout       int
+		   }
+	Log        struct {
+			   LogFile string
+			   ErrFile string
+		   }
 }
-
 
 func (config *ConfigParameters) ReadEnvVars() error {
 	user := "guest"
 	pass := "guest"
 	port := "5672"
 	host := "localhost"
+	exchange := "syntercom_exchnage"
 	RetryDelay := 30
-	QueueName := "notify"
+	QueueName := "syntercom"
 	PrefetchCount := 10
 	QueueWaitDelay := 30
 	DefaultTtl := 86400
@@ -56,6 +59,9 @@ func (config *ConfigParameters) ReadEnvVars() error {
 	if len(os.Getenv("RABBIT_HOST")) > 0 {
 		host = os.Getenv("RABBIT_HOST")
 	}
+	if len(os.Getenv("RABBIT_EXCHANGE")) > 0 {
+		exchange = os.Getenv("RABBIT_EXCHANGE")
+	}
 
 	config.Connection.RabbitmqURL = "amqp://" + user + ":" + pass + "@" + host + ":" + port + "/"
 	config.Connection.RetryDelay = RetryDelay
@@ -65,6 +71,7 @@ func (config *ConfigParameters) ReadEnvVars() error {
 	config.Message.DefaultTTL = DefaultTtl
 	config.Http.DefaultMethod = DefaultMethod
 	config.Http.Timeout = Timeout
+	config.Exchange.Name = exchange
 
 	if config.Connection.RetryDelay < 5 {
 		return errors.New("Connection Retry Delay must be at least 5 seconds")
