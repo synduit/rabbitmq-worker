@@ -31,6 +31,20 @@ func QueueCheck(config *config.ConfigParameters) error {
 	}
 	defer ch.Close()
 
+	// Create exchange.
+	err = ch.ExchangeDeclare(
+		config.Exchange.Name,            // name
+		"direct", // type
+		true,                // durable
+		false,               // auto-deleted
+		false,               // internal
+		false,               // no-wait
+		nil,
+	)
+	if err != nil {
+		return errors.New("Could not declare exchange " + config.Exchange.Name)
+	}
+
 	// Create main queue
 	args := make(amqp.Table)
 	args["x-dead-letter-exchange"] = ""
@@ -62,6 +76,17 @@ func QueueCheck(config *config.ConfigParameters) error {
 	)
 	if err != nil {
 		return errors.New("Could not declare queue " + waitQueue)
+	}
+
+	// Bind main queue to exchnage.
+	err = ch.QueueBind(
+		config.Queue.Name,   // queue name
+		"",       // routing key
+		config.Exchange.Name, // exchange
+		false,
+		nil)
+	if err != nil {
+		return errors.New("Could not bind main queue " + config.Queue.Name)
 	}
 
 	return nil
