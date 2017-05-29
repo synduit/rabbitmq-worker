@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	"log"
 )
 
 type Flags struct {
@@ -29,6 +30,9 @@ type Flags struct {
 var signals chan os.Signal
 
 func main() {
+	log.Printf("Sleeping for 2 seconds")
+	time.Sleep(2000)
+
 	var logFile logfile.Logger
 	var errFile logfile.Logger
 
