@@ -33,13 +33,13 @@ func QueueCheck(config *config.ConfigParameters) error {
 
 	// Create exchange.
 	err = ch.ExchangeDeclare(
-		config.Exchange.Name,            // name
-		"direct", // type
+		config.Exchange.Name, // name
+		"x-delayed-message", // type
 		true,                // durable
 		false,               // auto-deleted
 		false,               // internal
 		false,               // no-wait
-		nil,
+		amqp.Table{"x-delayed-type": "direct"},
 	)
 	if err != nil {
 		return errors.New("Could not declare exchange " + config.Exchange.Name)
