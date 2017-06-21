@@ -229,7 +229,7 @@ func (msg *HttpRequestMessage) HttpRequest(ackCh chan HttpRequestMessage, defaul
 		}
 	}
 
-	if resp.StatusCode >= 400 && resp.StatusCode <= 499 {
+	if resp.StatusCode >= 400 && resp.StatusCode <= 499 && resp.StatusCode != 429 {
 		msg.HttpErr = errors.New("4XX status on http request (no retry): " + resp.Status)
 		msg.Drop = true
 		ackCh <- *msg
