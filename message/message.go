@@ -202,7 +202,7 @@ func (msg *HttpRequestMessage) HttpRequest(ackCh chan HttpRequestMessage, defaul
 		return
 	}
 
-	client := &http.Client{Timeout: time.Duration(timeout) * time.Second}
+	client := &http.Client{Timeout: time.Duration(timeout) * time.Second, CheckRedirect: redirectPolicyFunc}
 
 	for hkey, hval := range msg.Headers {
 		req.Header.Set(hkey, hval)
@@ -211,6 +211,10 @@ func (msg *HttpRequestMessage) HttpRequest(ackCh chan HttpRequestMessage, defaul
 	resp, err := client.Do(req)
 
 	if err != nil {
+		if resp.StatusCode == 301 {
+			fmt.Println(err)
+			fmt.Println("Status: " + resp.Status + " Statuscode: " + resp.StatusCode + " Location: " + resp.Location + " Header: " + resp.Header + " Body: " + resp.Body)
+		}
 		msg.HttpErr = err
 		msg.HttpStatusMsg = "Error on http request: " + err.Error()
 		ackCh <- *msg
@@ -258,4 +262,8 @@ func (msg *HttpRequestMessage) CheckExpiration(waitDelay, defaultTTL int) {
 	}
 
 	return
+}
+
+func redirectPolicyFunc(req *http.Request, via []*http.Request) error {
+	return http.ErrUseLastResponse
 }
